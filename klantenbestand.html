@@ -134,8 +134,8 @@
       if (klantenStr) {
         try { klanten = JSON.parse(klantenStr); } catch (e) {}
       }
-      // Toon alle geverifieerde klanten
-      return klanten.filter(k => k.verified);
+      // Toon alle klanten (ook niet-geverifieerd voor test)
+      return klanten;
     }
 
     // Haal ritten uit localStorage en koppel aan klant op basis van e-mail/telefoon

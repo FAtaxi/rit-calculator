@@ -83,8 +83,6 @@
     <h1>FA Taxi Centrale Dashboard</h1>
   </header>
   <div class="container">
-    <h2>Welkom, F.amaioud</h2>
-    <p>Je bent succesvol ingelogd. Kies een module:</p>
     <div style="display:flex;gap:24px;flex-wrap:wrap;justify-content:center;margin-top:24px;">
       <a href="rittenoverzicht.html" class="dashboard-module-btn" style="background:linear-gradient(90deg,#bfa046 0%,#ffe082 100%);color:#23283a;font-weight:700;font-size:1.1em;padding:18px 36px;border:none;border-radius:12px;box-shadow:0 1px 3px #bfa04633;cursor:pointer;letter-spacing:0.5px;text-decoration:none;display:inline-block;text-align:center;">
         Rittenoverzicht
@@ -139,6 +137,12 @@
     document.getElementById('uitlog-btn').addEventListener('click', function() {
       sessionStorage.removeItem("beheer_ingelogd");
       localStorage.removeItem("klant");
+      window.location.href = "index.html";
+    });
+    // Uitloggen: wis alle klantdata en sessie
+    document.getElementById('uitlog-btn').addEventListener('click', function() {
+      localStorage.removeItem("klant");
+      sessionStorage.clear();
       window.location.href = "index.html";
     });
     // ...eventueel meer dashboard code...

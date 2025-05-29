@@ -144,15 +144,12 @@
     <div class="leeg" id="geen-ritten" style="display:none;">Geen ritten gevonden.</div>
   </div>
   <script>
-    // Haal alle ritten uit localStorage (array van ritten)
+    // Haal ritten uit localStorage
     function laadRitten() {
       let ritten = [];
-      // Demo: haal uit localStorage (in productie: uit backend/database)
       const rittenStr = localStorage.getItem("ritten");
       if (rittenStr) {
-        try {
-          ritten = JSON.parse(rittenStr);
-        } catch (e) {}
+        try { ritten = JSON.parse(rittenStr); } catch (e) {}
       }
       return ritten;
     }
@@ -168,39 +165,19 @@
       ritten.forEach(rit => {
         const tr = document.createElement('tr');
         tr.innerHTML = `
-          <td class="rit-id">${rit.id}</td>
-          <td>${rit.ophaaladres}</td>
-          <td>${rit.afzetadres}</td>
-          <td>${rit.datumtijd ? rit.datumtijd.replace('T',' ') : ''}</td>
-          <td>${rit.personen}</td>
-          <td class="status-${rit.status}">${rit.status ? rit.status.charAt(0).toUpperCase() + rit.status.slice(1) : ''}</td>
-          <td>€${rit.prijs}</td>
-          <td>
-            ${rit.gps ? `<button onclick="toonMap(${rit.gps.lat},${rit.gps.lng})" style='background:#2563eb;color:#fff;border:none;border-radius:6px;padding:6px 12px;cursor:pointer;'>Bekijk</button>` : ''}
-          </td>
+          <td>${rit.id || '-'}</td>
+          <td>${rit.ophaaladres || '-'}</td>
+          <td>${rit.afzetadres || '-'}</td>
+          <td>${rit.datumtijd ? rit.datumtijd.replace('T',' ') : '-'}</td>
+          <td>${rit.personen || '-'}</td>
+          <td>${rit.status || '-'}</td>
+          <td>${rit.prijs || '-'}</td>
+          <td>${rit.email || '-'}</td>
+          <td>${rit.telefoon || '-'}</td>
         `;
         tbody.appendChild(tr);
       });
     }
-
-    // Kaart tonen in popup
-    window.toonMap = function(lat, lng) {
-      const w = window.open("", "klantlocatie", "width=500,height=500");
-      w.document.write(`
-        <html><head>
-        <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
-        <style>html,body,#map{height:100%;margin:0;}</style>
-        </head><body>
-        <div id="map"></div>
-        <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-        <script>
-          var map = L.map('map').setView([${lat},${lng}], 15);
-          L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(map);
-          L.marker([${lat},${lng}]).addTo(map).bindPopup('Klant locatie').openPopup();
-        <\/script>
-        </body></html>
-      `);
-    };
 
     // Init
     toonRitten(laadRitten());
