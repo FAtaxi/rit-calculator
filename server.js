@@ -149,6 +149,18 @@ app.get('/favicon.ico', (req, res) => {
 // Geen actie nodig in server.js voor 'text-fill-color' foutmelding.
 // Deze fout hoort bij CSS in je HTML-bestanden, niet bij deze server code.
 
+// Controleer of ritten.json bestaat, maak aan als deze niet bestaat (Render: geen persistent disk!)
+const rittenPath = path.join(__dirname, "ritten.json");
+if (!fs.existsSync(rittenPath)) {
+  fs.writeFileSync(rittenPath, "[]");
+}
+
+// Controleer of klanten.json bestaat, maak aan als deze niet bestaat
+const klantenPath = path.join(__dirname, "klanten.json");
+if (!fs.existsSync(klantenPath)) {
+  fs.writeFileSync(klantenPath, "[]");
+}
+
 // Start server
 const port = process.env.PORT || 3000;
 app.listen(port, () => {
