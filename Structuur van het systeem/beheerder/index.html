@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+  <meta charset="UTF-8" />
+  <title>YOLO Taxi - Beheerder</title>
+  <link rel="stylesheet" href="../common/style.css" />
+</head>
+<body>
+  <div class="container">
+    <h2>Beheerdersoverzicht</h2>
+    <div style="color:red;font-size:0.9em;">
+      Let op: API-sleutels hieronder zijn alleen voor testgebruik en horen niet in productie in de frontend!
+    </div>
+    <div>
+      <strong>Mollie API key (test):</strong> <code>test_BzzwVfz5eDbPn5HCHKKt2DDHzSHEk7</code><br>
+      <strong>Weather API key:</strong> <code>9d1afafb80f94518850212856252004</code><br>
+      <strong>Openrouteservice API key:</strong> <code>5b3ce3597851110001cf6248b59dc263cab24bdabda48748cd9122b3</code>
+    </div>
+    <div id="ritten"></div>
+    <div id="chauffeurs"></div>
+    <div id="betalingen"></div>
+  </div>
+  <script>
+    // Voorbeeld: API keys als globale variabelen (alleen voor test!)
+    window.MOLLIE_API_KEY = "test_BzzwVfz5eDbPn5HCHKKt2DDHzSHEk7";
+    window.WEATHER_API_KEY = "9d1afafb80f94518850212856252004";
+    window.OPENROUTES_API_KEY = "5b3ce3597851110001cf6248b59dc263cab24bdabda48748cd9122b3";
+  </script>
+  <script src="../common/api.js"></script>
+  <script src="beheerder.js"></script>
+</body>
+</html>

@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>FA Taxi Service</title>
+  <style>
+    body {
+      background-color: #000;
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      color: white;
+      padding: 20px;
+    }
+    h1 {
+      color: red;
+      text-align: center;
+    }
+    .container {
+      max-width: 500px;
+      margin: auto;
+      background-color: #111;
+      padding: 20px;
+      border-radius: 12px;
+      box-shadow: 0 0 20px rgba(255,215,0,0.2);
+    }
+    input, button {
+      width: 100%;
+      padding: 12px;
+      margin-top: 10px;
+      border-radius: 6px;
+      border: none;
+      font-size: 16px;
+    }
+    input {
+      background-color: #222;
+      color: white;
+    }
+    button {
+      background-color: gold;
+      color: black;
+      font-weight: bold;
+    }
+    button:hover {
+      background-color: #e6c200;
+    }
+    #resultaat {
+      background-color: #222;
+      padding: 10px;
+      margin-top: 10px;
+      border-radius: 6px;
+    }
+  </style>
+</head>
+<body>
+  <h1>FA Taxi Service</h1>
+  <div class="container">
+    <input type="text" id="ophaaladres" placeholder="Ophaaladres">
+    <input type="text" id="afzetadres" placeholder="Afzetadres">
+    <button onclick="gebruikLocatie()">📍 Gebruik mijn locatie</button>
+    <button onclick="berekenRit()">Bereken ritprijs</button>
+    <div id="resultaat"></div>
+    <button id="boekKnop" onclick="boekRit()" style="display:none;">Boek nu via WhatsApp</button>
+  </div>
+
+  <script>
+    const opencageKey = "22f9046cc2b242a3a5f08cfabc005f78";
+    const openrouteKey = "5b3ce3597851110001cf6248b59dc263cab24bdabda48748cd9122b3";
+
+    async function getCoordinates(adres) {
+      const url = `https://api.opencagedata.com/geocode/v1/json?q=${encodeURIComponent(adres)}&key=${opencageKey}`;
+      const res = await fetch(url);
+      const data = await res.json();
+      if (data.results.length === 0) throw new Error("Geen locatie gevonden.");
+      const { lat, lng } = data.results[0].geometry;
+      return [lng, lat];
+    }
+
+    async function gebruikLocatie() {
+      if (navigator.geolocation) {
+        navigator.geolocation.getCurrentPosition(async (positie) => {
+          const lat = positie.coords.latitude;
+          const lon = positie.coords.longitude;
+          const url = `https://api.opencagedata.com/geocode/v1/json?q=${lat}+${lon}&key=${opencageKey}`;
+          const res = await fetch(url);
+          const data = await res.json();
+          const adres = data.results[0].formatted;
+          document.getElementById("ophaaladres").value = adres;
+        });
+      } else {
+        alert("Locatie niet ondersteund.");
+      }
+    }
+
+    async function berekenRit() {
+      const ophalen = document.getElementById("ophaaladres").value;
+      const afzetten = document.getElementById("afzetadres").value;
+
+      if (!ophalen || !afzetten) {
+        alert("Vul beide adressen in.");
+        return;
+      }
+
+      try {
+        const start = await getCoordinates(ophalen);
+        const eind = await getCoordinates(afzetten);
+
+        const routeURL = `https://api.openrouteservice.org/v2/directions/driving-car?api_key=${openrouteKey}&start=${start[0]},${start[1]}&end=${eind[0]},${eind[1]}`;
+        const response = await fetch(routeURL);
+        const data = await response.json();
+
+        const afstandKm = data.features[0].properties.summary.distance / 1000;
+        const duurMin = data.features[0].properties.summary.duration / 60;
+
+        const prijs = 3 + (afstandKm * 2.00) + (duurMin * 0.50);
+        const resultText = `🚖 Ritprijs: €${prijs.toFixed(2)}\nAfstand: ${afstandKm.toFixed(1)} km\nDuur: ${duurMin.toFixed(0)} minuten`;
+
+        document.getElementById("resultaat").innerText = resultText;
+        document.getElementById("boekKnop").style.display = "block";
+      } catch (err) {
+        console.error(err);
+        alert("Er ging iets mis bij het berekenen van de rit.");
+      }
+    }
+
+    async function boekRit() {
+      const ophalen = document.getElementById("ophaaladres").value;
+      const afzetten = document.getElementById("afzetadres").value;
+      const prijsInfo = document.getElementById("resultaat").innerText;
+
+      const bericht = `📲 Nieuw ritverzoek\n\n📍 Ophaaladres: ${ophalen}\n📍 Afzetadres: ${afzetten}\n\n${prijsInfo}`;
+
+      try {
+        const response = await fetch('http://localhost:3000/send', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ message: bericht })
+        });
+
+        if (response.ok) {
+          alert('✅ Rit succesvol geboekt via WhatsApp!');
+        } else {
+          alert('❌ Fout bij verzenden naar WhatsApp.');
+        }
+      } catch (error) {
+        console.error(error);
+        alert('❌ Fout bij het versturen van het bericht.');
+      }
+    }
+  </script>
+</body>
+</html>

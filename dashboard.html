@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+  <meta charset="UTF-8" />
+  <title>FA Taxi Centrale - Dashboard</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <link rel="stylesheet" href="klant-style.css" />
+  <style>
+    body {
+      background: linear-gradient(135deg, #23283a 0%, #353b4d 100%);
+      min-height: 100vh;
+      margin: 0;
+      padding: 0;
+      font-family: 'Segoe UI', Arial, sans-serif;
+      color: #fff;
+    }
+    header {
+      background: #23283a;
+      color: #ffe082;
+      padding: 32px 0 18px 0;
+      text-align: center;
+      border-bottom: 2px solid #bfa046;
+    }
+    header h1 {
+      font-size: 2.2em;
+      font-weight: 900;
+      margin: 0;
+      letter-spacing: 2px;
+      background: linear-gradient(90deg, #bfa046 0%, #ffe082 40%, #fffbe6 60%, #bfa046 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      text-fill-color: transparent;
+      filter: drop-shadow(0 2px 8px #fffbe633);
+    }
+    .container {
+      max-width: 900px;
+      margin: 36px auto 24px auto;
+      background: rgba(35,40,58,0.98);
+      border-radius: 18px;
+      box-shadow: 0 8px 32px #bfa04633, 0 2px 8px #fffbe61a;
+      padding: 32px 24px 24px 24px;
+      border: 2px solid #bfa046;
+    }
+    h2 {
+      color: #ffe082;
+      font-size: 1.5em;
+      margin-bottom: 18px;
+      font-weight: 700;
+      text-shadow: 0 2px 8px #fffbe633;
+    }
+    /* Voeg hier meer dashboard styles toe indien gewenst */
+  </style>
+</head>
+<body>
+  <header>
+    <h1>FA Taxi Centrale Dashboard</h1>
+  </header>
+  <div class="container">
+    <h2>Welkom, F.amaioud</h2>
+    <p>Je bent succesvol ingelogd. Kies een module:</p>
+    <div style="display:flex;gap:24px;flex-wrap:wrap;justify-content:center;margin-top:24px;">
+      <a href="rittenoverzicht.html" class="dashboard-module-btn" style="background:linear-gradient(90deg,#bfa046 0%,#ffe082 100%);color:#23283a;font-weight:700;font-size:1.1em;padding:18px 36px;border:none;border-radius:12px;box-shadow:0 1px 3px #bfa04633;cursor:pointer;letter-spacing:0.5px;text-decoration:none;display:inline-block;text-align:center;">
+        Rittenoverzicht
+      </a>
+      <a href="chauffeurs.html" class="dashboard-module-btn" style="background:linear-gradient(90deg,#2563eb 0%,#bfa046 100%);color:#fff;font-weight:700;font-size:1.1em;padding:18px 36px;border:none;border-radius:12px;box-shadow:0 1px 3px #2563eb33;cursor:pointer;letter-spacing:0.5px;text-decoration:none;display:inline-block;text-align:center;">
+        Chauffeurs
+      </a>
+    </div>
+  </div>
+  <script>
+    // Controleer of beheer_ingelogd is gezet in sessionStorage of als fallback op window
+    let ingelogd = false;
+    try {
+      // sessionStorage werkt alleen als je via http://localhost of een webserver draait!
+      ingelogd = sessionStorage.getItem("beheer_ingelogd") === "1";
+    } catch (err) {
+      ingelogd = !!window.beheer_ingelogd;
+    }
+
+    // Fallback: probeer window.beheer_ingelogd als sessionStorage niet werkt
+    if (!ingelogd && typeof window.beheer_ingelogd !== "undefined") {
+      ingelogd = !!window.beheer_ingelogd;
+    }
+
+    // Toon waarschuwing als je het bestand opent als file://
+    if (window.location.protocol === "file:") {
+      alert("Let op: Open deze pagina via http://localhost:8000 of een andere webserver. Anders werkt de login niet goed.");
+    }
+
+    if (!ingelogd) {
+      // Kleine vertraging zodat sessionStorage kan syncen in sommige browsers
+      setTimeout(function() {
+        window.location.href = "beheer.html";
+      }, 100);
+    }
+
+    // Zorg dat de login-status behouden blijft bij terug naar beheer.html
+    document.getElementById('naar-beheer-link').addEventListener('click', function(e) {
+      try {
+        // Zet de login-flag opnieuw voor de zekerheid
+        sessionStorage.setItem("beheer_ingelogd", "1");
+      } catch (err) {
+        window.beheer_ingelogd = true;
+      }
+      // geen localStorage/sessionStorage clear!
+      // standaard gedrag van de link laten doorgaan
+    });
+    // ...eventueel meer dashboard code...
+  </script>
+</body>
+</html>
