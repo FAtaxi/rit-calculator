@@ -30,6 +30,8 @@ app.post("/api/send-verificatie", async (req, res) => {
   const { email, code, naam } = req.body;
   if (!email || !code) return res.status(400).json({ error: "Email en code verplicht" });
   try {
+    // Test of mailconfig goed is
+    await transporter.verify();
     await transporter.sendMail({
       from: `"FA Taxi Centrale" <${process.env.MAIL_USER}>`,
       to: email,
@@ -38,6 +40,7 @@ app.post("/api/send-verificatie", async (req, res) => {
     });
     res.json({ success: true });
   } catch (err) {
+    console.error("Fout bij verzenden e-mail:", err);
     res.status(500).json({ error: "E-mail verzenden mislukt", details: err.message });
   }
 });
