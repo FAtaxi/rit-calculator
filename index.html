@@ -162,9 +162,10 @@
       let klanten = [];
       const klantenStr = localStorage.getItem("klanten");
       if (klantenStr) { try { klanten = JSON.parse(klantenStr); } catch (e) {} }
+      // Uniek op e-mail of telefoon
       klanten = klanten.filter(k =>
-        (k.email && klant.email && k.email !== klant.email) &&
-        (k.telefoon && klant.telefoon && k.telefoon !== klant.telefoon)
+        !(k.email && klant.email && k.email === klant.email) &&
+        !(k.telefoon && klant.telefoon && k.telefoon === klant.telefoon)
       );
       klanten.push(klant);
       localStorage.setItem("klanten", JSON.stringify(klanten));
@@ -190,6 +191,16 @@
       const naam = document.getElementById('naam').value.trim();
       const email = document.getElementById('email').value.trim();
       const telefoon = document.getElementById('telefoon').value.trim();
+      // Controleer of e-mail of telefoon al bestaat
+      let klanten = [];
+      const klantenStr = localStorage.getItem("klanten");
+      if (klantenStr) { try { klanten = JSON.parse(klantenStr); } catch (e) {} }
+      const bestaat = klanten.find(k => (k.email && k.email === email) || (k.telefoon && k.telefoon === telefoon));
+      if (bestaat) {
+        errorDiv.innerText = "Dit e-mailadres of telefoonnummer is al geregistreerd.";
+        errorDiv.style.display = "block";
+        return;
+      }
       if (!naam || !email || !telefoon) {
         errorDiv.innerText = "Vul alle velden in.";
         errorDiv.style.display = "block";
