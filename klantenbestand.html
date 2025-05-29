@@ -134,7 +134,7 @@
       if (klantenStr) {
         try { klanten = JSON.parse(klantenStr); } catch (e) {}
       }
-      // Filter alleen geverifieerde klanten
+      // Toon alle geverifieerde klanten
       return klanten.filter(k => k.verified);
     }
 

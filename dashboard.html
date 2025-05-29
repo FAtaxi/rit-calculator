@@ -52,7 +52,34 @@
   </style>
 </head>
 <body>
-  <header>
+  <header style="position:relative;">
+    <button id="uitlog-btn" style="
+      position: absolute;
+      left: 12px;
+      top: 12px;
+      background: linear-gradient(90deg,#ff6b6b 0%,#ffb199 100%);
+      color: #fff;
+      font-weight: 700;
+      font-size: 0.88em;
+      padding: 4px 12px 4px 26px;
+      border: none;
+      border-radius: 14px;
+      box-shadow: 0 1px 3px #ff6b6b33;
+      cursor: pointer;
+      letter-spacing: 0.2px;
+      transition: background 0.18s, color 0.18s, box-shadow 0.18s;
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      min-height: 22px;
+      height: 28px;
+    ">
+      <svg width="13" height="13" viewBox="0 0 20 20" fill="none" style="margin-right:2px;">
+        <path d="M7.5 4V2.5C7.5 1.67 8.17 1 9 1H15C15.83 1 16.5 1.67 16.5 2.5V17.5C16.5 18.33 15.83 19 15 19H9C8.17 19 7.5 18.33 7.5 17.5V16" stroke="#fff" stroke-width="1" stroke-linecap="round"/>
+        <path d="M13 10H3.5M3.5 10L6 7.5M3.5 10L6 12.5" stroke="#fff" stroke-width="1" stroke-linecap="round" stroke-linejoin="round"/>
+      </svg>
+      Uitloggen
+    </button>
     <h1>FA Taxi Centrale Dashboard</h1>
   </header>
   <div class="container">
@@ -107,6 +134,12 @@
       }
       // geen localStorage/sessionStorage clear!
       // standaard gedrag van de link laten doorgaan
+    });
+    // Uitlog knop: verwijder login flag en klantdata, redirect naar index
+    document.getElementById('uitlog-btn').addEventListener('click', function() {
+      sessionStorage.removeItem("beheer_ingelogd");
+      localStorage.removeItem("klant");
+      window.location.href = "index.html";
     });
     // ...eventueel meer dashboard code...
   </script>
