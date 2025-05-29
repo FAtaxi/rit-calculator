@@ -123,8 +123,13 @@ app.post("/api/klant", (req, res) => {
   const klant = req.body;
   if (!klant || !klant.email) return res.status(400).json({ error: "Klantgegevens ongeldig" });
   let klanten = [];
+  const klantenPath = path.join(__dirname, "klanten.json");
   if (fs.existsSync(klantenPath)) {
     try { klanten = JSON.parse(fs.readFileSync(klantenPath)); } catch (e) {}
+  }
+  // Zorg dat alleen geverifieerde klanten worden opgeslagen
+  if (!klant.verified) {
+    return res.status(400).json({ error: "Klant moet geverifieerd zijn" });
   }
   klanten = klanten.filter(k =>
     !(k.email && klant.email && k.email === klant.email) &&

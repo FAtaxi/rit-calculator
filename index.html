@@ -173,6 +173,7 @@
 
     function saveKlant(klant) {
       // Sla klant op via backend zodat het op elk apparaat zichtbaar is
+      if (!klant.verified) return; // Alleen geverifieerde klanten opslaan
       fetch("https://fa-taxi-centrale.onrender.com/api/klant", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -363,8 +364,21 @@
         .then(klanten => {
           const klant = klanten.find(k => k.email === loginCodeEmail);
           if (!klant) {
-            errorDiv.innerText = "Geen account gevonden bij dit e-mailadres. Maak eerst een account aan.";
+            errorDiv.innerHTML = `Geen account gevonden bij dit e-mailadres. <br>
+              <button id="terug-naar-inschrijven-btn" style="margin-top:10px;background:#bfa046;color:#23283a;font-weight:700;padding:8px 18px;border:none;border-radius:7px;cursor:pointer;">
+                Terug naar inschrijven
+              </button>`;
             errorDiv.style.display = "block";
+            // Voeg event toe aan knop
+            setTimeout(() => {
+              const btn = document.getElementById('terug-naar-inschrijven-btn');
+              if (btn) {
+                btn.onclick = function() {
+                  document.getElementById('login-container').style.display = "none";
+                  document.getElementById('account-form').style.display = "";
+                };
+              }
+            }, 0);
             return;
           }
           localStorage.setItem("klant", JSON.stringify(klant));

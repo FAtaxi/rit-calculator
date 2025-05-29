@@ -499,6 +499,9 @@
               tijd: new Date().toISOString()
             };
             localStorage.setItem("klant_gps", JSON.stringify(klantLocatie));
+            // Verberg eventuele foutmelding als locatie nu wel lukt
+            const errDiv = document.getElementById('locatie-error');
+            if (errDiv) errDiv.style.display = "none";
           },
           function(error) {
             let msg = "";
@@ -516,7 +519,7 @@
                 msg = "Onbekende locatie fout.";
             }
             console.warn("Locatie ophalen mislukt:", msg);
-            // Toon melding aan gebruiker
+            // Toon melding aan gebruiker, maar niet telkens opnieuw
             let errDiv = document.getElementById('locatie-error');
             if (!errDiv) {
               errDiv = document.createElement('div');
@@ -525,8 +528,9 @@
               document.body.insertBefore(errDiv, document.body.firstChild);
             }
             errDiv.textContent = msg;
+            errDiv.style.display = "block";
           },
-          { enableHighAccuracy: true, maximumAge: 10000, timeout: 10000 }
+          { enableHighAccuracy: false, maximumAge: 30000, timeout: 10000 }
         );
       } else {
         console.warn("Geolocatie niet ondersteund.");
