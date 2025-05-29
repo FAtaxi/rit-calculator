@@ -143,23 +143,31 @@
         }
         return klanten;
       }
+      return [];
     }
 
-    // Haal ritten uit localStorage en koppel aan klant op basis van e-mail/telefoon
-    function klantRitten(klant) {
-      let ritten = [];
-      const rittenStr = localStorage.getItem("ritten");
-      if (rittenStr) {
-        try { ritten = JSON.parse(rittenStr); } catch (e) {}
+    // Haal ritten uit backend (of localStorage als fallback)
+    async function laadRitten() {
+      try {
+        const resp = await fetch("https://fa-taxi-centrale.onrender.com/api/ritten");
+        if (resp.ok) {
+          return await resp.json();
+        }
+      } catch (e) {
+        let ritten = [];
+        const rittenStr = localStorage.getItem("ritten");
+        if (rittenStr) {
+          try { ritten = JSON.parse(rittenStr); } catch (e) {}
+        }
+        return ritten;
       }
-      // Koppel op e-mail of telefoon
-      return ritten.filter(r =>
-        (klant.email && r.email && r.email === klant.email) ||
-        (klant.telefoon && r.telefoon && r.telefoon === klant.telefoon)
-      );
+      return [];
     }
 
-    function toonKlanten(klanten) {
+    // Toon klanten en koppel ritten
+    async function initKlanten() {
+      const klanten = await laadKlanten();
+      const ritten = await laadRitten();
       const tbody = document.getElementById('klanten-tbody');
       tbody.innerHTML = "";
       if (!klanten.length) {
@@ -168,7 +176,10 @@
       }
       document.getElementById('geen-klanten').style.display = "none";
       klanten.forEach(klant => {
-        const ritten = klantRitten(klant);
+        const klantRitten = ritten.filter(r =>
+          (klant.email && r.email && r.email === klant.email) ||
+          (klant.telefoon && r.telefoon && r.telefoon === klant.telefoon)
+        );
         const tr = document.createElement('tr');
         tr.innerHTML = `
           <td>${klant.naam}</td>
@@ -179,7 +190,7 @@
             ${klant.gps ? `<button class="gps-btn" onclick="toonMap(${klant.gps.lat},${klant.gps.lng})">Bekijk</button>` : ''}
           </td>
           <td>
-            ${ritten.length > 0 ? ritten.map(r => `<div>Rit-ID: <span style="color:#bfa046;">${r.id || '-'}</span> <br>Datum: ${r.datumtijd ? r.datumtijd.replace('T',' ') : '-'}</div>`).join('<hr style="border:0;border-top:1px solid #353b4d;">') : 'Geen ritten'}
+            ${klantRitten.length > 0 ? klantRitten.map(r => `<div>Rit-ID: <span style="color:#bfa046;">${r.id || '-'}</span> <br>Datum: ${r.datumtijd ? r.datumtijd.replace('T',' ') : '-'}</div>`).join('<hr style="border:0;border-top:1px solid #353b4d;">') : 'Geen ritten'}
           </td>
         `;
         tbody.appendChild(tr);
@@ -206,7 +217,7 @@
     };
 
     // Init
-    toonKlanten(laadKlanten());
+    initKlanten();
   </script>
 </body>
 </html>

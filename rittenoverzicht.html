@@ -144,17 +144,25 @@
     <div class="leeg" id="geen-ritten" style="display:none;">Geen ritten gevonden.</div>
   </div>
   <script>
-    // Haal ritten uit localStorage
-    function laadRitten() {
-      let ritten = [];
-      const rittenStr = localStorage.getItem("ritten");
-      if (rittenStr) {
-        try { ritten = JSON.parse(rittenStr); } catch (e) {}
+    // Haal ritten uit backend (of localStorage als fallback)
+    async function laadRitten() {
+      try {
+        const resp = await fetch("https://fa-taxi-centrale.onrender.com/api/ritten");
+        if (resp.ok) {
+          return await resp.json();
+        }
+      } catch (e) {
+        let ritten = [];
+        const rittenStr = localStorage.getItem("ritten");
+        if (rittenStr) {
+          try { ritten = JSON.parse(rittenStr); } catch (e) {}
+        }
+        return ritten;
       }
-      return ritten;
     }
 
-    function toonRitten(ritten) {
+    async function toonRitten() {
+      const ritten = await laadRitten();
       const tbody = document.getElementById('ritten-tbody');
       tbody.innerHTML = "";
       if (!ritten.length) {
@@ -180,7 +188,7 @@
     }
 
     // Init
-    toonRitten(laadRitten());
+    toonRitten();
   </script>
 </body>
 </html>

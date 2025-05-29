@@ -534,7 +534,14 @@
     }
     startGPS();
 
-    // Mollie betaling starten (vereist backend in productie!)
+    // Helper: klant ophalen uit localStorage
+    function getKlant() {
+      try {
+        return JSON.parse(localStorage.getItem("klant") || "{}");
+      } catch (e) { return {}; }
+    }
+
+    // Bij rit boeken: sla rit op in localStorage én in backend (voor dashboard)
     document.getElementById('bevestig-betaal-btn').addEventListener('click', async function() {
       // Verzamel ritgegevens
       const ophaaladres = document.getElementById('ophaal').value;
@@ -542,7 +549,8 @@
       const personen = document.getElementById('personen').value;
       const reserveringDatumTijd = document.getElementById('reservering-datetime')?.value || "";
       const opmerking = document.getElementById('opmerking')?.value || "";
-      // ...haal overige gegevens op...
+      const klant = getKlant();
+      const prijs = localStorage.getItem("rit_prijs") || "";
 
       // Sla rit tijdelijk op met status 'open'
       const ritId = window.genereerRitId ? window.genereerRitId() : ("RIT-" + Date.now());
@@ -553,10 +561,13 @@
         datumtijd: reserveringDatumTijd,
         personen,
         status: "open",
-        prijs: localStorage.getItem("rit_prijs") || "",
+        prijs,
         gps: klantLocatie,
-        opmerking
+        opmerking,
+        email: klant.email,
+        telefoon: klant.telefoon
       };
+      // Sla lokaal op (voor directe feedback)
       let ritten = [];
       const rittenStr = localStorage.getItem("ritten");
       if (rittenStr) { try { ritten = JSON.parse(rittenStr); } catch (e) {} }
@@ -564,8 +575,19 @@
       localStorage.setItem("ritten", JSON.stringify(ritten));
       localStorage.setItem("laatste_rit_id", ritId);
 
-      // Start Mollie betaling (vereist backend, hier demo-link)
-      // In productie: POST naar eigen backend die Mollie payment aanmaakt en redirect naar response.links.payment.href
+      // Sla rit centraal op via backend (voor dashboard)
+      try {
+        await fetch("https://fa-taxi-centrale.onrender.com/api/rit", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(rit)
+        });
+      } catch (e) {
+        // Foutmelding mag, maar rit blijft lokaal zichtbaar
+        console.warn("Rit niet centraal opgeslagen:", e);
+      }
+
+      // Start Mollie betaling (demo-link)
       window.location.href = "https://www.mollie.com/payments/demo/ideal?amount=10.00&description=Rit%20" + ritId;
     });
   </script>

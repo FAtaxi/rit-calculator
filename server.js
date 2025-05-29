@@ -84,8 +84,6 @@ app.get('/locatie', (req, res) => {
 
 // Klantenbestand API (voor alle apparaten)
 app.get("/api/klanten", (req, res) => {
-  // In productie: haal uit database!
-  // Voor demo: haal uit bestand of memory (hier: uit local file indien aanwezig)
   let klanten = [];
   try {
     if (fs.existsSync(path.join(__dirname, "klanten.json"))) {
@@ -97,7 +95,20 @@ app.get("/api/klanten", (req, res) => {
   res.json(klanten);
 });
 
-// Pas saveKlant backend aan zodat nieuwe klanten in klanten.json worden opgeslagen
+// Rittenbestand API (voor alle apparaten)
+app.get("/api/ritten", (req, res) => {
+  let ritten = [];
+  try {
+    if (fs.existsSync(path.join(__dirname, "ritten.json"))) {
+      ritten = JSON.parse(fs.readFileSync(path.join(__dirname, "ritten.json")));
+    }
+  } catch (e) {
+    ritten = [];
+  }
+  res.json(ritten);
+});
+
+// Klant opslaan (POST)
 app.post("/api/klant", (req, res) => {
   const klant = req.body;
   if (!klant || !klant.email) return res.status(400).json({ error: "Klantgegevens ongeldig" });
@@ -106,13 +117,27 @@ app.post("/api/klant", (req, res) => {
   if (fs.existsSync(klantenPath)) {
     try { klanten = JSON.parse(fs.readFileSync(klantenPath)); } catch (e) {}
   }
-  // Uniek op e-mail of telefoon
   klanten = klanten.filter(k =>
     !(k.email && klant.email && k.email === klant.email) &&
     !(k.telefoon && klant.telefoon && k.telefoon === klant.telefoon)
   );
   klanten.push(klant);
   fs.writeFileSync(klantenPath, JSON.stringify(klanten, null, 2));
+  res.json({ success: true });
+});
+
+// Rit opslaan (POST)
+app.post("/api/rit", (req, res) => {
+  const rit = req.body;
+  if (!rit || !rit.id) return res.status(400).json({ error: "Ritgegevens ongeldig" });
+  let ritten = [];
+  const rittenPath = path.join(__dirname, "ritten.json");
+  if (fs.existsSync(rittenPath)) {
+    try { ritten = JSON.parse(fs.readFileSync(rittenPath)); } catch (e) {}
+  }
+  ritten = ritten.filter(r => r.id !== rit.id);
+  ritten.push(rit);
+  fs.writeFileSync(rittenPath, JSON.stringify(ritten, null, 2));
   res.json({ success: true });
 });
 
