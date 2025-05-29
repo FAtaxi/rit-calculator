@@ -127,15 +127,22 @@
     <div class="leeg" id="geen-klanten" style="display:none;">Geen klanten gevonden.</div>
   </div>
   <script>
-    // Haal klanten uit localStorage (in productie: uit backend/database)
-    function laadKlanten() {
-      let klanten = [];
-      const klantenStr = localStorage.getItem("klanten");
-      if (klantenStr) {
-        try { klanten = JSON.parse(klantenStr); } catch (e) {}
+    // Haal klanten uit backend (of localStorage als fallback)
+    async function laadKlanten() {
+      try {
+        const resp = await fetch("https://fa-taxi-centrale.onrender.com/api/klanten");
+        if (resp.ok) {
+          return await resp.json();
+        }
+      } catch (e) {
+        // Fallback op localStorage (alleen voor test)
+        let klanten = [];
+        const klantenStr = localStorage.getItem("klanten");
+        if (klantenStr) {
+          try { klanten = JSON.parse(klantenStr); } catch (e) {}
+        }
+        return klanten;
       }
-      // Toon alle klanten (ook niet-geverifieerd voor test)
-      return klanten;
     }
 
     // Haal ritten uit localStorage en koppel aan klant op basis van e-mail/telefoon
@@ -199,7 +206,7 @@
     };
 
     // Init
-    toonKlanten(laadKlanten());
+    laadKlanten().then(toonKlanten);
   </script>
 </body>
 </html>

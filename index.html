@@ -156,19 +156,15 @@
     }
 
     function saveKlant(klant) {
-      // Sla klant op in localStorage (voor demo, in productie: stuur naar backend)
-      localStorage.setItem("klant", JSON.stringify(klant));
-      // Voeg toe aan klantenlijst voor dashboard, voorkom dubbele e-mail/telefoon
-      let klanten = [];
-      const klantenStr = localStorage.getItem("klanten");
-      if (klantenStr) { try { klanten = JSON.parse(klantenStr); } catch (e) {} }
-      // Uniek op e-mail of telefoon
-      klanten = klanten.filter(k =>
-        !(k.email && klant.email && k.email === klant.email) &&
-        !(k.telefoon && klant.telefoon && k.telefoon === klant.telefoon)
-      );
-      klanten.push(klant);
-      localStorage.setItem("klanten", JSON.stringify(klanten));
+      // Sla klant op via backend zodat het op elk apparaat zichtbaar is
+      fetch("https://fa-taxi-centrale.onrender.com/api/klant", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(klant)
+      }).then(() => {
+        localStorage.setItem("klant", JSON.stringify(klant));
+      });
+      // ...localStorage blijft voor snelle toegang, maar backend is leidend
     }
 
     // Check of klant al is ingelogd
