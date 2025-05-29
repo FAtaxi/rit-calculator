@@ -139,15 +139,20 @@
     </div>
   </div>
   <script>
-    // Simpele demo: account opslaan in localStorage en verificatiecode via backend/email
+    // Account opslaan in localStorage en verificatiecode via backend/email
     async function sendVerificationEmail(email, code, naam) {
-      // Vervang de URL hieronder door jouw eigen backend endpoint die e-mail verstuurt
-      // Bijvoorbeeld: https://jouw-backend.onrender.com/api/send-verificatie
-      await fetch("https://jouw-backend.onrender.com/api/send-verificatie", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email, code, naam })
-      });
+      // Fallback: laat een melding zien als backend niet werkt
+      try {
+        const resp = await fetch("https://fa-taxi-centrale.onrender.com/api/send-verificatie", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ email, code, naam })
+        });
+        if (!resp.ok) throw new Error("Backend gaf een foutmelding");
+      } catch (err) {
+        alert("Verificatie e-mail kon niet worden verzonden. Controleer of je backend op Render goed draait of probeer het later opnieuw.");
+        throw err;
+      }
     }
 
     function saveKlant(klant) {
@@ -203,7 +208,7 @@
       }
       // Genereer verificatiecode
       gegenereerdeCode = (Math.floor(100000 + Math.random() * 900000)).toString();
-      // Stuur code per e-mail via backend
+      // Stuur code per e-mail via backend op Render
       try {
         await sendVerificationEmail(email, gegenereerdeCode, naam);
       } catch (err) {
