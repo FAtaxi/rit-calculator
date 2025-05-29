@@ -15,14 +15,12 @@ app.use(express.json());
 
 const dataPath = path.join(__dirname, 'chauffeurs.json');
 
-// Gebruik Outlook SMTP, nu via environment variables (Render: MAIL_USER en MAIL_PASS)
-// Je hoeft het e-mailadres en wachtwoord NIET hardcoded in de code te zetten.
-// Render vult deze automatisch in via process.env.MAIL_USER en process.env.MAIL_PASS
+// Gebruik Gmail SMTP, via environment variables (Render: MAIL_USER en MAIL_PASS)
 const transporter = nodemailer.createTransport({
-  service: "hotmail",
+  service: "gmail",
   auth: {
-    user: process.env.MAIL_USER, // fataxiservice@outlook.com
-    pass: process.env.MAIL_PASS  // Ahllen2@
+    user: process.env.MAIL_USER, // jouw gmail-adres
+    pass: process.env.MAIL_PASS  // app-wachtwoord van Gmail
   }
 });
 
@@ -30,7 +28,8 @@ app.post("/api/send-verificatie", async (req, res) => {
   const { email, code, naam } = req.body;
   if (!email || !code) return res.status(400).json({ error: "Email en code verplicht" });
   try {
-    // Test of mailconfig goed is
+    // Log voor debuggen
+    console.log("Verificatie e-mail versturen naar:", email, "code:", code, "naam:", naam);
     await transporter.verify();
     await transporter.sendMail({
       from: `"FA Taxi Centrale" <${process.env.MAIL_USER}>`,
@@ -41,12 +40,13 @@ app.post("/api/send-verificatie", async (req, res) => {
     res.json({ success: true });
   } catch (err) {
     console.error("Fout bij verzenden e-mail:", err);
-    res.status(500).json({ error: "E-mail verzenden mislukt", details: err.message });
+    // Geef meer details terug voor debuggen (alleen tijdelijk!)
+    res.status(500).json({ error: "E-mail verzenden mislukt", details: err.message, stack: err.stack });
   }
 });
 
 app.get("/", (req, res) => {
-  res.send("FA Taxi Centrale backend draait!");
+  res.send("<h1>FA Taxi Centrale backend draait!</h1>");
 });
 
 // 🚗 Registratie
@@ -86,6 +86,9 @@ app.get('/locatie', (req, res) => {
 app.get('/favicon.ico', (req, res) => {
   res.status(204).end();
 });
+
+// Geen actie nodig in server.js voor 'text-fill-color' foutmelding.
+// Deze fout hoort bij CSS in je HTML-bestanden, niet bij deze server code.
 
 // Start server
 const port = process.env.PORT || 3000;
