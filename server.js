@@ -4,6 +4,10 @@ import nodemailer from "nodemailer";
 import fs from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'url';
+const { MongoClient } = require("mongodb");
+const MONGO_URI = "mongodb+srv://fataxiservice:EhiH3bdU62OooWlx@cluster0.3fq9l9r.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0";
+const DB_NAME = "fa_taxi_centrale";
+let db;
 
 // Fix __dirname for ES modules
 const __filename = fileURLToPath(import.meta.url);
@@ -14,6 +18,19 @@ app.use(cors());
 app.use(express.json());
 
 const dataPath = path.join(__dirname, 'chauffeurs.json');
+
+// MongoDB configuration
+
+// Maak verbinding met MongoDB bij server start
+MongoClient.connect(MONGO_URI, { useUnifiedTopology: true })
+  .then(client => {
+    db = client.db(DB_NAME);
+    console.log("MongoDB connected");
+  })
+  .catch(err => {
+    console.error("MongoDB connectie fout:", err);
+    process.exit(1);
+  });
 
 // Gebruik Gmail SMTP, via environment variables (Render: MAIL_USER en MAIL_PASS)
 const transporter = nodemailer.createTransport({
@@ -87,71 +104,72 @@ const rittenPath = path.join(__dirname, "ritten.json");
 if (!fs.existsSync(rittenPath)) {
   fs.writeFileSync(rittenPath, "[]");
 }
+
+// Zorg dat klanten.json altijd bestaat (zoals bij ritten.json)
 const klantenPath = path.join(__dirname, "klanten.json");
 if (!fs.existsSync(klantenPath)) {
   fs.writeFileSync(klantenPath, "[]");
 }
 
-// Klantenbestand API (voor alle apparaten)
-app.get("/api/klanten", (req, res) => {
-  let klanten = [];
-  try {
-    if (fs.existsSync(klantenPath)) {
-      klanten = JSON.parse(fs.readFileSync(klantenPath));
-    }
-  } catch (e) {
-    klanten = [];
+// Zorg dat alle klant-routes wachten tot MongoDB connectie klaar is
+function requireDb(req, res, next) {
+  if (!db) {
+    res.status(503).json({ error: "Database nog niet verbonden" });
+  } else {
+    next();
   }
-  res.json(klanten);
+}
+
+// Klantenbestand API (MongoDB)
+app.get("/api/klanten", requireDb, async (req, res) => {
+  try {
+    const klanten = await db.collection("klanten").find({}).toArray();
+    res.json(klanten);
+  } catch (e) {
+    res.status(500).json({ error: "Kan klanten niet ophalen" });
+  }
 });
 
-// Rittenbestand API (voor alle apparaten)
-app.get("/api/ritten", (req, res) => {
-  let ritten = [];
-  try {
-    if (fs.existsSync(rittenPath)) {
-      ritten = JSON.parse(fs.readFileSync(rittenPath));
-    }
-  } catch (e) {
-    ritten = [];
-  }
-  res.json(ritten);
-});
-
-// Klant opslaan (POST)
-app.post("/api/klant", (req, res) => {
+// Klant opslaan (POST, MongoDB)
+app.post("/api/klant", requireDb, async (req, res) => {
   const klant = req.body;
   if (!klant || !klant.email) return res.status(400).json({ error: "Klantgegevens ongeldig" });
-  let klanten = [];
-  const klantenPath = path.join(__dirname, "klanten.json");
-  if (fs.existsSync(klantenPath)) {
-    try { klanten = JSON.parse(fs.readFileSync(klantenPath)); } catch (e) {}
+  try {
+    await db.collection("klanten").updateOne(
+      { email: klant.email },
+      { $set: klant },
+      { upsert: true }
+    );
+    res.json({ success: true });
+  } catch (e) {
+    res.status(500).json({ error: "Kan klant niet opslaan" });
   }
-  // Zorg dat alleen geverifieerde klanten worden opgeslagen
-  if (!klant.verified) {
-    return res.status(400).json({ error: "Klant moet geverifieerd zijn" });
-  }
-  klanten = klanten.filter(k =>
-    !(k.email && klant.email && k.email === klant.email) &&
-    !(k.telefoon && klant.telefoon && k.telefoon === klant.telefoon)
-  );
-  klanten.push(klant);
-  fs.writeFileSync(klantenPath, JSON.stringify(klanten, null, 2));
-  res.json({ success: true });
 });
 
-// Rit opslaan (POST)
-app.post("/api/rit", (req, res) => {
+// Rittenbestand API (MongoDB)
+app.get("/api/ritten", async (req, res) => {
+  try {
+    const ritten = await db.collection("ritten").find({}).toArray();
+    res.json(ritten);
+  } catch (e) {
+    res.status(500).json({ error: "Kan ritten niet ophalen" });
+  }
+});
+
+// Rit opslaan (POST, MongoDB)
+app.post("/api/rit", async (req, res) => {
   const rit = req.body;
   if (!rit || !rit.id) return res.status(400).json({ error: "Ritgegevens ongeldig" });
-  let ritten = [];
-  if (fs.existsSync(rittenPath)) {
-    try { ritten = JSON.parse(fs.readFileSync(rittenPath)); } catch (e) {}
+  try {
+    await db.collection("ritten").updateOne(
+      { id: rit.id },
+      { $set: rit },
+      { upsert: true }
+    );
+    res.json({ success: true });
+  } catch (e) {
+    res.status(500).json({ error: "Kan rit niet opslaan" });
   }
-  ritten = ritten.filter(r => r.id !== rit.id);
-  ritten.push(rit);
-  fs.writeFileSync(rittenPath, JSON.stringify(ritten, null, 2));
-  res.json({ success: true });
 });
 
 // Voeg favicon route toe om 404 te voorkomen

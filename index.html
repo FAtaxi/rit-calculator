@@ -173,13 +173,21 @@
 
     function saveKlant(klant) {
       // Sla klant op via backend zodat het op elk apparaat zichtbaar is
-      if (!klant.verified) return; // Alleen geverifieerde klanten opslaan
       fetch("https://fa-taxi-centrale.onrender.com/api/klant", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(klant)
-      }).then(() => {
-        localStorage.setItem("klant", JSON.stringify(klant));
+      })
+      .then(resp => resp.json())
+      .then(result => {
+        if (result && result.success) {
+          localStorage.setItem("klant", JSON.stringify(klant));
+        } else {
+          alert("Klant kon niet opgeslagen worden. Probeer opnieuw.");
+        }
+      })
+      .catch(() => {
+        alert("Klant kon niet opgeslagen worden. Controleer je verbinding.");
       });
     }
 

@@ -302,6 +302,17 @@
   </header>
   <div class="container">
     <h2>Boek je rit</h2>
+    <div id="klant-profiel" style="background:#fffbe6;border-radius:10px;padding:18px 14px;margin-bottom:18px;color:#23283a;text-align:left;box-shadow:0 1px 3px #bfa04633;">
+      <strong>Mijn profiel</strong><br>
+      <span id="profiel-naam"></span><br>
+      <span id="profiel-email"></span><br>
+      <span id="profiel-telefoon"></span><br>
+      <span id="profiel-aangemaakt"></span>
+    </div>
+    <div id="klant-ritten" style="background:#fffbe6;border-radius:10px;padding:18px 14px;margin-bottom:18px;color:#23283a;text-align:left;box-shadow:0 1px 3px #bfa04633;">
+      <strong>Mijn ritten</strong>
+      <ul id="mijn-ritten-lijst" style="margin:10px 0 0 0;padding:0;list-style:none;"></ul>
+    </div>
     <form id="boeking-form" autocomplete="off" novalidate>
       <label for="ophaal">Ophaal locatie*</label>
       <div class="input-row">
@@ -594,6 +605,51 @@
       // Start Mollie betaling (demo-link)
       window.location.href = "https://www.mollie.com/payments/demo/ideal?amount=10.00&description=Rit%20" + ritId;
     });
+
+    // Toon klantprofiel en ritgeschiedenis
+    async function toonKlantProfielEnRitten() {
+      let klant = null;
+      try {
+        klant = JSON.parse(localStorage.getItem("klant") || "{}");
+      } catch (e) {}
+      if (!klant || !klant.email) return;
+
+      document.getElementById("profiel-naam").textContent = "Naam: " + (klant.naam || "-");
+      document.getElementById("profiel-email").textContent = "E-mail: " + (klant.email || "-");
+      document.getElementById("profiel-telefoon").textContent = "Telefoon: " + (klant.telefoon || "-");
+      document.getElementById("profiel-aangemaakt").textContent = "Aangemaakt: " + (klant.aangemaakt ? new Date(klant.aangemaakt).toLocaleString() : "-");
+
+      // Haal ritten op van backend (alleen van deze klant)
+      let ritten = [];
+      try {
+        const resp = await fetch("https://fa-taxi-centrale.onrender.com/api/ritten");
+        if (resp.ok) {
+          ritten = await resp.json();
+        }
+      } catch (e) {}
+      const mijnRitten = ritten.filter(r =>
+        (klant.email && r.email && r.email === klant.email) ||
+        (klant.telefoon && r.telefoon && r.telefoon === klant.telefoon)
+      );
+      const ul = document.getElementById("mijn-ritten-lijst");
+      ul.innerHTML = "";
+      if (mijnRitten.length === 0) {
+        ul.innerHTML = "<li>Geen ritten gevonden.</li>";
+      } else {
+        mijnRitten.forEach(r => {
+          const li = document.createElement("li");
+          li.innerHTML = `<strong>Rit-ID:</strong> ${r.id || "-"}<br>
+            <strong>Datum:</strong> ${r.datumtijd ? r.datumtijd.replace('T',' ') : "-"}<br>
+            <strong>Van:</strong> ${r.ophaaladres || "-"}<br>
+            <strong>Naar:</strong> ${r.afzetadres || "-"}<br>
+            <strong>Status:</strong> ${r.status || "-"}<br>
+            <strong>Prijs:</strong> ${r.prijs || "-"}<hr style="border:0;border-top:1px solid #bfa046;">`;
+          ul.appendChild(li);
+        });
+      }
+    }
+
+    document.addEventListener("DOMContentLoaded", toonKlantProfielEnRitten);
   </script>
 </body>
 </html>
