@@ -82,12 +82,22 @@ app.get('/locatie', (req, res) => {
   res.json(locatie);
 });
 
+// Zorg dat ritten.json en klanten.json altijd bestaan (ook op Render)
+const rittenPath = path.join(__dirname, "ritten.json");
+if (!fs.existsSync(rittenPath)) {
+  fs.writeFileSync(rittenPath, "[]");
+}
+const klantenPath = path.join(__dirname, "klanten.json");
+if (!fs.existsSync(klantenPath)) {
+  fs.writeFileSync(klantenPath, "[]");
+}
+
 // Klantenbestand API (voor alle apparaten)
 app.get("/api/klanten", (req, res) => {
   let klanten = [];
   try {
-    if (fs.existsSync(path.join(__dirname, "klanten.json"))) {
-      klanten = JSON.parse(fs.readFileSync(path.join(__dirname, "klanten.json")));
+    if (fs.existsSync(klantenPath)) {
+      klanten = JSON.parse(fs.readFileSync(klantenPath));
     }
   } catch (e) {
     klanten = [];
@@ -99,8 +109,8 @@ app.get("/api/klanten", (req, res) => {
 app.get("/api/ritten", (req, res) => {
   let ritten = [];
   try {
-    if (fs.existsSync(path.join(__dirname, "ritten.json"))) {
-      ritten = JSON.parse(fs.readFileSync(path.join(__dirname, "ritten.json")));
+    if (fs.existsSync(rittenPath)) {
+      ritten = JSON.parse(fs.readFileSync(rittenPath));
     }
   } catch (e) {
     ritten = [];
@@ -113,7 +123,6 @@ app.post("/api/klant", (req, res) => {
   const klant = req.body;
   if (!klant || !klant.email) return res.status(400).json({ error: "Klantgegevens ongeldig" });
   let klanten = [];
-  const klantenPath = path.join(__dirname, "klanten.json");
   if (fs.existsSync(klantenPath)) {
     try { klanten = JSON.parse(fs.readFileSync(klantenPath)); } catch (e) {}
   }
@@ -131,7 +140,6 @@ app.post("/api/rit", (req, res) => {
   const rit = req.body;
   if (!rit || !rit.id) return res.status(400).json({ error: "Ritgegevens ongeldig" });
   let ritten = [];
-  const rittenPath = path.join(__dirname, "ritten.json");
   if (fs.existsSync(rittenPath)) {
     try { ritten = JSON.parse(fs.readFileSync(rittenPath)); } catch (e) {}
   }
@@ -148,18 +156,6 @@ app.get('/favicon.ico', (req, res) => {
 
 // Geen actie nodig in server.js voor 'text-fill-color' foutmelding.
 // Deze fout hoort bij CSS in je HTML-bestanden, niet bij deze server code.
-
-// Controleer of ritten.json bestaat, maak aan als deze niet bestaat (Render: geen persistent disk!)
-const rittenPath = path.join(__dirname, "ritten.json");
-if (!fs.existsSync(rittenPath)) {
-  fs.writeFileSync(rittenPath, "[]");
-}
-
-// Controleer of klanten.json bestaat, maak aan als deze niet bestaat
-const klantenPath = path.join(__dirname, "klanten.json");
-if (!fs.existsSync(klantenPath)) {
-  fs.writeFileSync(klantenPath, "[]");
-}
 
 // Start server
 const port = process.env.PORT || 3000;
