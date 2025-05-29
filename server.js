@@ -3,6 +3,11 @@ import cors from "cors";
 import nodemailer from "nodemailer";
 import fs from 'fs';
 import path from 'path';
+import { fileURLToPath } from 'url';
+
+// Fix __dirname for ES modules
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 const app = express();
 app.use(cors());
@@ -10,12 +15,14 @@ app.use(express.json());
 
 const dataPath = path.join(__dirname, 'chauffeurs.json');
 
-// Pas deze aan naar je eigen e-mailprovider (voorbeeld: Gmail)
+// Gebruik Outlook SMTP, nu via environment variables (Render: MAIL_USER en MAIL_PASS)
+// Je hoeft het e-mailadres en wachtwoord NIET hardcoded in de code te zetten.
+// Render vult deze automatisch in via process.env.MAIL_USER en process.env.MAIL_PASS
 const transporter = nodemailer.createTransport({
-  service: "gmail",
+  service: "hotmail",
   auth: {
-    user: process.env.EMAIL_USER, // Zet in Render als environment variable
-    pass: process.env.EMAIL_PASS  // Zet in Render als environment variable
+    user: process.env.MAIL_USER, // fataxiservice@outlook.com
+    pass: process.env.MAIL_PASS  // Ahllen2@
   }
 });
 
@@ -24,7 +31,7 @@ app.post("/api/send-verificatie", async (req, res) => {
   if (!email || !code) return res.status(400).json({ error: "Email en code verplicht" });
   try {
     await transporter.sendMail({
-      from: `"FA Taxi Centrale" <${process.env.EMAIL_USER}>`,
+      from: `"FA Taxi Centrale" <${process.env.MAIL_USER}>`,
       to: email,
       subject: "Uw verificatiecode voor FA Taxi Centrale",
       text: `Beste ${naam || "klant"},\n\nUw verificatiecode is: ${code}\n\nMet vriendelijke groet,\nFA Taxi Centrale`
