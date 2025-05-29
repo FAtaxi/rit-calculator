@@ -82,6 +82,11 @@ app.get('/locatie', (req, res) => {
   res.json(locatie);
 });
 
+// Voeg favicon route toe om 404 te voorkomen
+app.get('/favicon.ico', (req, res) => {
+  res.status(204).end();
+});
+
 // Start server
 const port = process.env.PORT || 3000;
 app.listen(port, () => {
